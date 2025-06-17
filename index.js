@@ -1,11 +1,39 @@
 const express = require('express')
 const cors = require('cors')
+var admin = require("firebase-admin");
+var serviceAccount = require("./firebaseAdminKey.json.json");
+
 const app = express()
 const port = 3000
 
 app.use(express.json())
 app.use(cors())
 
+admin.initializeApp({
+
+  credential: admin.credential.cert(serviceAccount)
+
+});
+
+
+const verifyFirebaseToken = async (req, res, next) => {
+  const authHeader = req.headers?.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
+
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(token)
+    req.decoded = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
+
+}
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -30,44 +58,35 @@ async function run() {
 
 
 
-    const DB=client.db('bookDB')
+    const DB = client.db('bookDB')
     const categoryCollection = DB.collection('catagorys');
-    const subCtegoryCollection = DB.collection('subcategorys');
-    
+    const usersCallections = DB.collection('user');
 
 
 
-    app.post('/api/post', async (req, res) => {
-      try {
-        const category = req.body;
-        const result = await subCtegoryCollection.insertMany(category);
-        res.status(201).json(result);
-        console.log(result);
-      } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Failed to add category' });
+    app.post('/api/v1/users', async (req, res) => {
+      const { name, photoUrl, email } = req.body;
+      const existingUser = await usersCallections.findOne({ email });
+      if (existingUser) {
+        return res.status(409).send({ message: 'User already exists' });
       }
+      const newUser = { name, photoUrl, email,role:'user' };
+      const result = await usersCallections.insertOne(newUser);
+      res.send(result);
     });
+   
+
+      app.get('/api/v1/users/admin/:email',verifyFirebaseToken,async(req,res)=>{
+      const email = req.params.email;
+      const query={email: email}
+      const user= await usersCallections.findOne(query)
+      const result={admin: user?.role==='admin'}
+      res.send(result)
+    })
 
 
-    app.get('/api/category', async (req, res) => {
-      try {
-        const categories = await categoryCollection.find({}).toArray();
-        res.status(200).json(categories);
-      } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch categories' });
-      }
-    });
 
-    app.get('/subcategory/:category', async (req, res) => {
-      try {
-        const category = req.params.category;
-        const subcategories = await subCtegoryCollection.find({ category }).toArray();
-        res.status(200).json(subcategories);
-      } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch subcategories' });
-      }
-    });
+
 
 
 
