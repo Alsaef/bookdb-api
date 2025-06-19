@@ -14,7 +14,6 @@ app.use(
       "http://localhost:5173", // ✅ Localhost
       "https://bangla-varsity.netlify.app" // ✅ Netlify Live URL
     ],
-    credentials: true
   })
 );
 
