@@ -72,10 +72,13 @@ async function run() {
     });
 
 
+
+    // private api
     app.get('/api/v1/users/admin/:email',verifToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
       const user = await usersCallections.findOne(query)
+      console.log(user?.role);
       const result = { admin: user?.role === 'admin' }
       res.send(result)
     })
@@ -97,7 +100,34 @@ async function run() {
     })
 
 
-// category
+// categor
+
+// private api
+app.post('/api/v1/categories',verifToken,async(req,res)=>{
+  try {
+    const categoryData=req.body
+
+    const result = await categoryCollection.insertOne(categoryData)
+
+    res.status(200).send(result)
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
+
+// public api
+app.get('/api/v1/categories',async(req,res)=>{
+  try {
+    const result=await categoryCollection.find({}).toArray()
+
+    console.log(result);
+    res.status(200).send(result)
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
 
 
 
