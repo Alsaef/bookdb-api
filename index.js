@@ -56,6 +56,7 @@ async function run() {
 
     const DB = client.db('bookDB')
     const categoryCollection = DB.collection('catagorys');
+    const contentCollection = DB.collection('content');
     const usersCallections = DB.collection('user');
 
 
@@ -121,7 +122,7 @@ app.get('/api/v1/categories',async(req,res)=>{
   try {
     const result=await categoryCollection.find({}).toArray()
 
-    console.log(result);
+   
     res.status(200).send(result)
   } catch (error) {
     console.log(error);
@@ -129,6 +130,44 @@ app.get('/api/v1/categories',async(req,res)=>{
   }
 })
 
+// public api
+app.get('/api/v1/categories/:category',async(req,res)=>{
+  try {
+
+    const category=req.params.category
+    const result=await categoryCollection.find({category}).toArray()
+
+ 
+    res.status(200).send(result)
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
+
+app.post('/api/v1/content',verifToken,async(req,res)=>{
+    try {
+    const content=req.body
+
+    const result = await contentCollection.insertOne(content)
+
+    res.status(200).send(result)
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
+
+
+app.get('/api/v1/content',async(req,res)=>{
+  try {
+     const result=await contentCollection.find({}).toArray()
+      res.status(200).send(result)
+  } catch (error) {
+       console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
 
 
 
