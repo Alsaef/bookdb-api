@@ -6,7 +6,18 @@ const app = express()
 const port = 3000
 
 app.use(express.json())
-app.use(cors())
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // ✅ Localhost
+      "https://bangla-varsity.netlify.app" // ✅ Netlify Live URL
+    ],
+    credentials: true
+  })
+);
+
 
 
 
