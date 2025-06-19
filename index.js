@@ -20,26 +20,26 @@ app.use(
 
 
 
-const verifToken = async (req, res, next) => {
-  const authHeader = req.headers?.authorization;
-  console.log(authHeader);
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).send({ message: 'unauthorized access' })
-  }
+// const verifToken = async (req, res, next) => {
+//   const authHeader = req.headers?.authorization;
+//   console.log(authHeader);
+//   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//     return res.status(401).send({ message: 'unauthorized access' })
+//   }
 
 
-  const token = authHeader.split(' ')[1];
+//   const token = authHeader.split(' ')[1];
 
-  try {
-    const decoded =  jwt.verify(token,`0689be11d6dfdc71455635308d90d590315729da4549b1a91fa35093c760143bbd07f564d81ee929719dab0a0ddc58bae21a065adfdf1d3d9fd1
-4928947eaff3`)
-    req.decoded = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).send({ message: 'unauthorized access' })
-  }
+//   try {
+//     const decoded =  jwt.verify(token,`0689be11d6dfdc71455635308d90d590315729da4549b1a91fa35093c760143bbd07f564d81ee929719dab0a0ddc58bae21a065adfdf1d3d9fd1
+// 4928947eaff3`)
+//     req.decoded = decoded;
+//     next();
+//   } catch (error) {
+//     return res.status(401).send({ message: 'unauthorized access' })
+//   }
 
-}
+// }
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -85,7 +85,7 @@ async function run() {
 
 
     // private api
-    app.get('/api/v1/users/admin/:email',verifToken, async (req, res) => {
+    app.get('/api/v1/users/admin/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
       const user = await usersCallections.findOne(query)
@@ -114,7 +114,7 @@ async function run() {
 // categor
 
 // private api
-app.post('/api/v1/categories',verifToken,async(req,res)=>{
+app.post('/api/v1/categories',async(req,res)=>{
   try {
     const categoryData=req.body
 
@@ -155,7 +155,7 @@ app.get('/api/v1/categories/:category',async(req,res)=>{
   }
 })
 
-app.post('/api/v1/content',verifToken,async(req,res)=>{
+app.post('/api/v1/content',async(req,res)=>{
     try {
     const content=req.body
 
