@@ -121,7 +121,22 @@ app.get('/api/v1/categories',async(req,res)=>{
   try {
     const result=await categoryCollection.find({}).toArray()
 
-    console.log(result);
+   
+    res.status(200).send(result)
+  } catch (error) {
+    console.log(error);
+      res.status(500).send({ message: 'Server Error 500' });
+  }
+})
+
+// public api
+app.get('/api/v1/categories/:category',async(req,res)=>{
+  try {
+
+    const category=req.params.category
+    const result=await categoryCollection.find({category}).toArray()
+
+ 
     res.status(200).send(result)
   } catch (error) {
     console.log(error);
