@@ -42,7 +42,7 @@ app.use(
 // }
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://BookDB:fXQ0gfSwZhMFjzDC@cluster0.wycxuko.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -107,79 +107,153 @@ async function run() {
 4928947eaff3`, { expiresIn: '7d' })
 
       res.status(200).send(token)
-      
+
     })
 
 
-// categor
+    // categor
 
-// private api
-app.post('/api/v1/categories',async(req,res)=>{
+    // private api
+    app.post('/api/v1/categories', async (req, res) => {
+      try {
+        const categoryData = req.body
+
+        const result = await categoryCollection.insertOne(categoryData)
+
+        res.status(200).send(result)
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+    // public api
+    app.get('/api/v1/categories', async (req, res) => {
+      try {
+        const result = await categoryCollection.find({}).toArray()
+
+
+        res.status(200).send(result)
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+    // public api
+    app.get('/api/v1/categories/:category', async (req, res) => {
+      try {
+
+        const category = req.params.category
+        const result = await categoryCollection.find({ category }).toArray()
+
+
+        res.status(200).send(result)
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+    app.post('/api/v1/content', async (req, res) => {
+      try {
+        const content = req.body
+
+        const result = await contentCollection.insertOne(content)
+
+        res.status(200).send(result)
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+
+    app.get('/api/v1/content', async (req, res) => {
+      try {
+        const result = await contentCollection.find({}).toArray()
+        res.status(200).send(result)
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+    app.get('/api/v1/content/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedContent = await contentCollection.findOneAndUpdate({ _id: new ObjectId(id) }, { $inc: { view: 1 } }, { returnDocument: "after" })
+
+        const result = await contentCollection.findOne({ _id: new ObjectId(id) })
+
+        res.status(200).json({
+          success: true,
+          message: "Content found and view counted",
+          content: result
+        });
+
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+app.post('/api/v1/content/like/:id', async (req, res) => {
   try {
-    const categoryData=req.body
+    const { id } = req.params;
+    const { email } = req.body; 
 
-    const result = await categoryCollection.insertOne(categoryData)
+    const result = await contentCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $addToSet: { likes: email } } 
+    );
 
-    res.status(200).send(result)
+    res.status(200).json({
+      success: true,
+      message: "Liked successfully",
+      result
+    });
+
+  } catch (error) {
+    console.error("Like Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
+app.delete('/api/v1/content/like/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+
+    const result = await contentCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $pull: { likes: email } } 
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Unliked successfully",
+      result
+    });
+
+  } catch (error) {
+    console.error("Unlike Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+app.get('/api/v1/tranding', async (req, res) => {
+  try {
+    const result = await contentCollection.find({})
+      .sort({ view: -1 })
+      .toArray();
+    res.status(200).send(result);
   } catch (error) {
     console.log(error);
-      res.status(500).send({ message: 'Server Error 500' });
+    res.status(500).send({ message: 'Server Error 500' });
   }
 })
-
-// public api
-app.get('/api/v1/categories',async(req,res)=>{
-  try {
-    const result=await categoryCollection.find({}).toArray()
-
-   
-    res.status(200).send(result)
-  } catch (error) {
-    console.log(error);
-      res.status(500).send({ message: 'Server Error 500' });
-  }
-})
-
-// public api
-app.get('/api/v1/categories/:category',async(req,res)=>{
-  try {
-
-    const category=req.params.category
-    const result=await categoryCollection.find({category}).toArray()
-
- 
-    res.status(200).send(result)
-  } catch (error) {
-    console.log(error);
-      res.status(500).send({ message: 'Server Error 500' });
-  }
-})
-
-app.post('/api/v1/content',async(req,res)=>{
-    try {
-    const content=req.body
-
-    const result = await contentCollection.insertOne(content)
-
-    res.status(200).send(result)
-  } catch (error) {
-    console.log(error);
-      res.status(500).send({ message: 'Server Error 500' });
-  }
-})
-
-
-app.get('/api/v1/content',async(req,res)=>{
-  try {
-     const result=await contentCollection.find({}).toArray()
-      res.status(200).send(result)
-  } catch (error) {
-       console.log(error);
-      res.status(500).send({ message: 'Server Error 500' });
-  }
-})
-
-
 
   } finally {
     // Ensures that the client will close when you finish/error
