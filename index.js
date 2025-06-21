@@ -255,6 +255,36 @@ app.get('/api/v1/tranding', async (req, res) => {
   }
 })
 
+app.patch('/api/categories/subcategories', async (req, res) => {
+  try {
+    const { categoryId, subcategories } = req.body;
+
+    if (!categoryId || !Array.isArray(subcategories)) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    const result = await categoryCollection.updateOne(
+      { _id: new ObjectId(categoryId) },
+      { $addToSet: { subcategories: { $each: subcategories } } } // prevent duplicates
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Category not found or subcategories already exist" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Subcategories added successfully",
+      result,
+    });
+  } catch (error) {
+    console.error("Subcategory Update Error:", error);
+    res.status(500).json({ message: "Server Error 500" });
+  }
+});
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
