@@ -197,56 +197,66 @@ async function run() {
         res.status(500).send({ message: 'Server Error 500' });
       }
     })
+    app.post('/api/v1/content/like/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { email } = req.body; 
 
-app.post('/api/v1/content/like/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { email } = req.body; 
+        const result = await contentCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { 
+            $addToSet: { likes: email },
+            $inc: { likeCount: 1 }
+          }
+        );
 
-    const result = await contentCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $addToSet: { likes: email } } 
-    );
+        res.status(200).json({
+          success: true,
+          message: "Liked successfully",
+          result
+        });
 
-    res.status(200).json({
-      success: true,
-      message: "Liked successfully",
-      result
+      } catch (error) {
+        console.error("Like Error:", error);
+        res.status(500).json({ message: "Server Error" });
+      }
     });
 
-  } catch (error) {
-    console.error("Like Error:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
+    app.delete('/api/v1/content/like/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { email } = req.body;
 
+        // Decrement likeCount by 1, but ensure it doesn't go below 0
+        const content = await contentCollection.findOne({ _id: new ObjectId(id) });
+        let newLikeCount = (content?.likeCount || 0) - 1;
+        if (newLikeCount < 0) newLikeCount = 0;
 
-app.delete('/api/v1/content/like/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { email } = req.body;
+        const result = await contentCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { 
+            $pull: { likes: email },
+            $set: { likeCount: newLikeCount }
+          }
+        );
 
-    const result = await contentCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $pull: { likes: email } } 
-    );
+        res.status(200).json({
+          success: true,
+          message: "Unliked successfully",
+          result
+        });
 
-    res.status(200).json({
-      success: true,
-      message: "Unliked successfully",
-      result
+      } catch (error) {
+        console.error("Unlike Error:", error);
+        res.status(500).json({ message: "Server Error" });
+      }
     });
-
-  } catch (error) {
-    console.error("Unlike Error:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
 
 app.get('/api/v1/tranding', async (req, res) => {
   try {
     const result = await contentCollection.find({})
       .sort({ view: -1 })
+      .limit(10)
       .toArray();
     res.status(200).send(result);
   } catch (error) {
@@ -284,7 +294,18 @@ app.patch('/api/categories/subcategories', async (req, res) => {
 });
 
 
-
+app.get('/api/v1/content/sort/like', async (req, res) => {
+  try {
+    const result = await contentCollection.find({})
+      .sort({ likeCount: -1 })
+      .limit(10)
+      .toArray();
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Sort LikeCount Error:", error);
+    res.status(500).send({ message: 'Server Error 500' });
+  }
+});
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
