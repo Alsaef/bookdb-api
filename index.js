@@ -68,6 +68,7 @@ async function run() {
     const categoryCollection = DB.collection('catagorys');
     const contentCollection = DB.collection('content');
     const usersCallections = DB.collection('user');
+    const commentCollection = DB.collection('comment');
 
 
 
@@ -200,11 +201,11 @@ async function run() {
     app.post('/api/v1/content/like/:id', async (req, res) => {
       try {
         const { id } = req.params;
-        const { email } = req.body; 
+        const { email } = req.body;
 
         const result = await contentCollection.updateOne(
           { _id: new ObjectId(id) },
-          { 
+          {
             $addToSet: { likes: email },
             $inc: { likeCount: 1 }
           }
@@ -234,7 +235,7 @@ async function run() {
 
         const result = await contentCollection.updateOne(
           { _id: new ObjectId(id) },
-          { 
+          {
             $pull: { likes: email },
             $set: { likeCount: newLikeCount }
           }
@@ -252,60 +253,87 @@ async function run() {
       }
     });
 
-app.get('/api/v1/tranding', async (req, res) => {
-  try {
-    const result = await contentCollection.find({})
-      .sort({ view: -1 })
-      .limit(10)
-      .toArray();
-    res.status(200).send(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: 'Server Error 500' });
-  }
-})
+    app.get('/api/v1/tranding', async (req, res) => {
+      try {
+        const result = await contentCollection.find({})
+          .sort({ view: -1 })
+          .toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
 
-app.patch('/api/categories/subcategories', async (req, res) => {
-  try {
-    const { categoryId, subcategories } = req.body;
+    app.patch('/api/categories/subcategories', async (req, res) => {
+      try {
+        const { categoryId, subcategories } = req.body;
 
-    if (!categoryId || !Array.isArray(subcategories)) {
-      return res.status(400).json({ message: "Invalid input" });
-    }
+        if (!categoryId || !Array.isArray(subcategories)) {
+          return res.status(400).json({ message: "Invalid input" });
+        }
 
-    const result = await categoryCollection.updateOne(
-      { _id: new ObjectId(categoryId) },
-      { $addToSet: { subcategories: { $each: subcategories } } } // prevent duplicates
-    );
+        const result = await categoryCollection.updateOne(
+          { _id: new ObjectId(categoryId) },
+          { $addToSet: { subcategories: { $each: subcategories } } } // prevent duplicates
+        );
 
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({ message: "Category not found or subcategories already exist" });
-    }
+        if (result.modifiedCount === 0) {
+          return res.status(404).json({ message: "Category not found or subcategories already exist" });
+        }
 
-    res.status(200).json({
-      success: true,
-      message: "Subcategories added successfully",
-      result,
+        res.status(200).json({
+          success: true,
+          message: "Subcategories added successfully",
+          result,
+        });
+      } catch (error) {
+        console.error("Subcategory Update Error:", error);
+        res.status(500).json({ message: "Server Error 500" });
+      }
     });
-  } catch (error) {
-    console.error("Subcategory Update Error:", error);
-    res.status(500).json({ message: "Server Error 500" });
-  }
-});
 
 
-app.get('/api/v1/content/sort/like', async (req, res) => {
-  try {
-    const result = await contentCollection.find({})
-      .sort({ likeCount: -1 })
-      .limit(10)
-      .toArray();
-    res.status(200).send(result);
-  } catch (error) {
-    console.error("Sort LikeCount Error:", error);
-    res.status(500).send({ message: 'Server Error 500' });
-  }
-});
+    app.get('/api/v1/content/sort/like', async (req, res) => {
+      try {
+        const result = await contentCollection.find({})
+          .sort({ likeCount: -1 })
+          .toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.error("Sort LikeCount Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+
+    });
+
+
+
+
+    app.post('/api/v1/comment', async (req, res) => {
+      try {
+        const comment = req.body;
+        const result = await commentCollection.insertOne(comment);
+        res.status(200).send(result);
+      } catch (error) {
+        console.error("Sort LikeCount Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+
+    app.get('/api/v1/comment', async (req, res) => {
+      try {
+
+        const result = await commentCollection.find({}).sort({date:-1}).toArray()
+        res.status(200).send(result);
+
+
+      } catch (error) {
+        console.error("Sort LikeCount Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
