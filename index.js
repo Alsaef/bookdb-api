@@ -69,6 +69,7 @@ async function run() {
     const contentCollection = DB.collection('content');
     const usersCallections = DB.collection('user');
     const commentCollection = DB.collection('comment');
+    const jobCollection = DB.collection('jobs');
 
 
 
@@ -332,6 +333,48 @@ async function run() {
       } catch (error) {
         console.error("Sort LikeCount Error:", error);
         res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+
+
+    app.post('/api/v1/jobs', async (req, res) => {
+      try {
+        const jobs = req.body;
+        const result = await jobCollection.insertOne(jobs);
+        res.status(200).send(result);
+      } catch (error) {
+        console.error("Sort LikeCount Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+
+    app.get('/api/v1/jobs', async (req, res) => {
+      try {
+
+        const result = await jobCollection.find({}).toArray()
+        res.status(200).send(result);
+
+
+      } catch (error) {
+        console.error("Sort LikeCount Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
+      }
+    })
+
+    
+    app.get('/api/v1/jobs/:id', async (req, res) => {
+      try {
+      const { id } = req.params;
+      const result = await jobCollection.findOne({ _id: new ObjectId(id) });
+      if (!result) {
+        return res.status(404).send({ message: 'Job not found' });
+      }
+      res.status(200).send(result);
+      } catch (error) {
+      console.error("Find Job Error:", error);
+      res.status(500).send({ message: 'Server Error 500' });
       }
     })
   } finally {
