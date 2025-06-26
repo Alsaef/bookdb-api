@@ -171,6 +171,45 @@ async function run() {
     })
 
 
+    app.get('/api/v1/content/search', async (req, res) => {
+  try {
+    const { keyword, category, subcategory } = req.query;
+
+    const query = {};
+
+    // যদি keyword থাকে তাহলে title, content এবং writer এর মধ্যে খুঁজবে (case insensitive)
+    if (keyword) {
+      query.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { content: { $regex: keyword, $options: 'i' } },
+        { writer: { $regex: keyword, $options: 'i' } }
+      ];
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (subcategory) {
+      query.subcategory = subcategory;
+    }
+
+    const results = await contentCollection.find(query).toArray();
+
+    res.status(200).json({
+      success: true,
+      message: "Search results fetched successfully",
+      count: results.length,
+      results,
+    });
+
+  } catch (error) {
+    console.error("Search API Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
     app.get('/api/v1/content', async (req, res) => {
       try {
         const result = await contentCollection.find({}).toArray()
@@ -353,7 +392,7 @@ async function run() {
     app.get('/api/v1/jobs', async (req, res) => {
       try {
 
-        const result = await jobCollection.find({}).toArray()
+        const result = await jobCollection.find({}).sort({deadline:-1}).toArray()
         res.status(200).send(result);
 
 
