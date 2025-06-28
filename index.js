@@ -1,17 +1,19 @@
-const express = require('express')
-const cors = require('cors')
-
-const jwt = require('jsonwebtoken')
-const app = express()
-const port = 3000
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+const jwt = require('jsonwebtoken');
+const app = express();
+const port = process.env.PORT || 3000
 
 app.use(express.json())
 
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // ✅ Localhost
-      "https://bangla-varsity.netlify.app" // ✅ Netlify Live URL
+      "http://localhost:5173", 
+      "https://bangla-varsity.netlify.app",
+      "https://banglaversity.com",
+      "https://bookdb-api.vercel.app"
     ],
     credentials: true
   })
@@ -19,31 +21,8 @@ app.use(
 
 
 
-
-// const verifToken = async (req, res, next) => {
-//   const authHeader = req.headers?.authorization;
-//   console.log(authHeader);
-//   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-//     return res.status(401).send({ message: 'unauthorized access' })
-//   }
-
-
-//   const token = authHeader.split(' ')[1];
-
-//   try {
-//     const decoded =  jwt.verify(token,`0689be11d6dfdc71455635308d90d590315729da4549b1a91fa35093c760143bbd07f564d81ee929719dab0a0ddc58bae21a065adfdf1d3d9fd1
-// 4928947eaff3`)
-//     req.decoded = decoded;
-//     next();
-//   } catch (error) {
-//     return res.status(401).send({ message: 'unauthorized access' })
-//   }
-
-// }
-
-
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const uri = "mongodb+srv://BookDB:fXQ0gfSwZhMFjzDC@cluster0.wycxuko.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wycxuko.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
