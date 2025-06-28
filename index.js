@@ -13,6 +13,7 @@ app.use(
       "http://localhost:5173", 
       "https://bangla-varsity.netlify.app",
       "https://banglaversity.com",
+      "http://banglaversity.com",
       "https://bookdb-api.vercel.app"
     ],
     credentials: true
