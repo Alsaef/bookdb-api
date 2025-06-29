@@ -10,11 +10,11 @@ app.use(express.json())
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", 
+      "http://localhost:5173",
       "https://bangla-varsity.netlify.app",
       "https://banglaversity.com",
       "http://banglaversity.com",
-      "https://bookdb-api.vercel.app"
+      "http://localhost:3000"
     ],
     credentials: true
   })
@@ -151,43 +151,28 @@ async function run() {
     })
 
 
-    app.get('/api/v1/content/search', async (req, res) => {
-  try {
-    const { keyword, category, subcategory } = req.query;
 
-    const query = {};
 
-    // যদি keyword থাকে তাহলে title, content এবং writer এর মধ্যে খুঁজবে (case insensitive)
-    if (keyword) {
-      query.$or = [
-        { title: { $regex: keyword, $options: 'i' } },
-        { content: { $regex: keyword, $options: 'i' } },
-        { writer: { $regex: keyword, $options: 'i' } }
-      ];
-    }
+    app.get('/api/v1/content/search/title-category', async (req, res) => {
+      try {
+        const { title, category } = req.query;
+        const query = {};
 
-    if (category) {
-      query.category = category;
-    }
+        if (title) {
+          query.title = { $regex: title, $options: 'i' };
+        }
+        if (category) {
+          query.category = category;
+        }
 
-    if (subcategory) {
-      query.subcategory = subcategory;
-    }
+        const results = await contentCollection.find(query).toArray();
 
-    const results = await contentCollection.find(query).toArray();
-
-    res.status(200).json({
-      success: true,
-      message: "Search results fetched successfully",
-      count: results.length,
-      results,
+        res.status(200).json(results);
+      } catch (error) {
+        console.error("Title-Category Search Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
     });
-
-  } catch (error) {
-    console.error("Search API Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
 
 
     app.get('/api/v1/content', async (req, res) => {
@@ -345,7 +330,7 @@ async function run() {
     app.get('/api/v1/comment', async (req, res) => {
       try {
 
-        const result = await commentCollection.find({}).sort({date:-1}).toArray()
+        const result = await commentCollection.find({}).sort({ date: -1 }).toArray()
         res.status(200).send(result);
 
 
@@ -372,7 +357,7 @@ async function run() {
     app.get('/api/v1/jobs', async (req, res) => {
       try {
 
-        const result = await jobCollection.find({}).sort({deadline:-1}).toArray()
+        const result = await jobCollection.find({}).sort({ deadline: -1 }).toArray()
         res.status(200).send(result);
 
 
@@ -382,18 +367,18 @@ async function run() {
       }
     })
 
-    
+
     app.get('/api/v1/jobs/:id', async (req, res) => {
       try {
-      const { id } = req.params;
-      const result = await jobCollection.findOne({ _id: new ObjectId(id) });
-      if (!result) {
-        return res.status(404).send({ message: 'Job not found' });
-      }
-      res.status(200).send(result);
+        const { id } = req.params;
+        const result = await jobCollection.findOne({ _id: new ObjectId(id) });
+        if (!result) {
+          return res.status(404).send({ message: 'Job not found' });
+        }
+        res.status(200).send(result);
       } catch (error) {
-      console.error("Find Job Error:", error);
-      res.status(500).send({ message: 'Server Error 500' });
+        console.error("Find Job Error:", error);
+        res.status(500).send({ message: 'Server Error 500' });
       }
     })
   } finally {
